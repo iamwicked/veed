@@ -1,62 +1,91 @@
-import { useState } from 'react';
-import { Modal, Button, Text, useMantineTheme, FileButton, Box } from '@mantine/core';
-import * as TablerIcons from 'tabler-icons-react';
-const { Upload } = TablerIcons;
+"use client";
 
-function DropboxPopup() {
+import React, { useState, useRef } from 'react';
+import { Modal, Button, Text, useMantineTheme, Center, Divider, Anchor, Input, Group, Stack } from '@mantine/core';
+import { Upload, Link as LinkIcon } from 'tabler-icons-react';
+import { Dropzone } from '@mantine/dropzone';
+
+interface DropboxPopupProps {
+  onFileUploaded: (file: File) => void;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const DropboxPopup: React.FC<DropboxPopupProps> = ({ onFileUploaded, isOpen, onClose }) => {
   const theme = useMantineTheme();
-  const [opened, setOpened] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [inputValue, setInputValue] = useState('');
 
-  const handleFileChange = (files: File[]) => {
-    if (files.length > 0) {
-      setFile(files[0]);
-    }
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(event.target.value);
+  };
+
+  const handleImport = () => {
+    // Add your import logic here (fetch file from URL, etc.)
+    console.log('Importing from URL:', inputValue);
   };
 
   return (
     <>
-      <Modal
-        opened={opened}
-        onClose={() => setOpened(false)}
-        title="Add Audio to Video"
-        centered
-        styles={{
-          title: {
-            fontWeight: 700,
-            fontSize: 20,
-          },
-        }}
-      >
-        <Box p="md">
-          <FileButton onChange={handleFileChange} accept="audio/*">
-            {(props) => (
-              <Button
-                leftIcon={<Upload size={14} />} // Adjusted size for Mantine
-                variant="outline"
-                color={theme.primaryColor}
-                fullWidth
-                {...props} // Spread props for proper button behavior
-              >
-                Upload a File
-              </Button>
-            )}
-          </FileButton>
-
-          <Text color="dimmed" size="sm" ta="center" mt="xs">
-            or drag and drop a file or import from a link
-          </Text>
-
-          {/* Display uploaded file name if available */}
-          {file && <Text mt="md">Selected file: {file.name}</Text>}
-        </Box>
+      <Modal opened={isOpen} onClose={onClose} title="Add Audio to Video" centered size="lg">
+        <Stack spacing="md">
+          <Dropzone onDrop={(files) => onFileUploaded(files[0])} multiple={false}>
+            <Stack align="center" spacing="xs" style={{ pointerEvents: 'none' }}>
+              <Upload size={50} color={theme.colors.blue[6]} />
+              <Text align="center" size="xl" mt="md">
+                Drag and drop to upload
+              </Text>
+              <Text align="center" size="sm" color="dimmed" mt={7}>
+                or
+              </Text>
+            </Stack>
+          </Dropzone>
+          <Center>
+            <Button variant="outline" onClick={handleButtonClick}>
+              Browse Files
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="audio/*,video/*"
+              hidden
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) {
+                  onFileUploaded(file);
+                }
+              }}
+            />
+          </Center>
+          <Divider label="Or" labelPosition="center" my="xs" />
+          <Group spacing="md">
+            <Input
+              icon={<LinkIcon size={16} />}
+              placeholder="Paste a link to import"
+              value={inputValue}
+              onChange={handleInputChange}
+            />
+            <Button onClick={handleImport} disabled={!inputValue.trim()}>
+              Import
+            </Button>
+          </Group>
+          <Group position="apart" mt="md">
+            <Anchor color="dimmed" size="xs" onClick={onClose}>
+              Learn more about supported formats
+            </Anchor>
+          </Group>
+        </Stack>
       </Modal>
 
-      <Button onClick={() => setOpened(true)} variant="filled" fullWidth size="xl" radius="xl" color="blue">
+      <Button onClick={onClose} variant="filled" fullWidth size="xl" radius="xl" color="blue">
         Add Audio to Video
       </Button>
     </>
   );
-}
+};
 
 export default DropboxPopup;
