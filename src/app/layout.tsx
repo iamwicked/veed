@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const toggleColorScheme = (value?: ColorScheme) =>
     setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
 
-  useHotkeys([['mod+J', () => toggleColorScheme()]]); // Toggle with keyboard shortcut
+  useHotkeys([['mod+J', () => toggleColorScheme()]]); 
 
   return (
     <html lang="en">

@@ -61,7 +61,7 @@ const Viewport = forwardRef<ViewportHandle, ViewportProps>(
               controls
               style={{
                 width: `${zoomLevel * 100}%`,
-                height: 'auto', // Maintain aspect ratio
+                height: 'auto', 
               }}
             />
           )}
