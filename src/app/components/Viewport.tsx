@@ -86,5 +86,5 @@ const Viewport = forwardRef<ViewportHandle, ViewportProps>(
     );
   }
 );
-
+Viewport.displayName = "Viewport";
 export default Viewport;
