@@ -30,40 +30,25 @@ const Viewport = forwardRef<ViewportHandle, ViewportProps>(
       const videoElement = videoRef.current;
 
       if (videoElement) {
-        videoElement.addEventListener('play', () => {
-          setShowPlayIcon(false);
-        });
+        const handlePlay = () => setShowPlayIcon(false);
+        const handlePause = () => setShowPlayIcon(true);
 
-        videoElement.addEventListener('pause', () => {
-          setShowPlayIcon(true);
-        });
+        videoElement.addEventListener('play', handlePlay);
+        videoElement.addEventListener('pause', handlePause);
+
+        return () => {
+          videoElement.removeEventListener('play', handlePlay);
+          videoElement.removeEventListener('pause', handlePause);
+        };
       }
     }, []);
 
     const handleZoomOut = () => {
-      if (videoRef.current) {
-        const videoElement = videoRef.current;
-        const currentWidth = videoElement.style.width;
-
-        const newWidth = currentWidth ? parseInt(currentWidth, 10) - 10 + "%" : "90%";
-
-        videoElement.style.width = newWidth;
-        videoElement.style.height = "auto"; // Maintain aspect ratio
-        setZoomLevel(zoomLevel - 0.1); // Update the zoom level state
-      }
+      setZoomLevel((prevZoomLevel) => Math.max(prevZoomLevel - 0.1, 0.1));
     };
 
     const handleZoomIn = () => {
-      if (videoRef.current) {
-        const videoElement = videoRef.current;
-        const currentWidth = videoElement.style.width;
-
-        const newWidth = currentWidth ? parseInt(currentWidth, 10) + 10 + "%" : "110%";
-
-        videoElement.style.width = newWidth;
-        videoElement.style.height = "auto"; // Maintain aspect ratio
-        setZoomLevel(zoomLevel + 0.1); // Update the zoom level state
-      }
+      setZoomLevel((prevZoomLevel) => prevZoomLevel + 0.1);
     };
 
     return (

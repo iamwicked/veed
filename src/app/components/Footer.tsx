@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Slider, Group, ActionIcon, Text, Tooltip, useMantineTheme } from '@mantine/core';
-import { FlipHorizontal, Microphone, Volume2, Volume3, ArrowsMaximize } from 'tabler-icons-react';
+import { Slider, Group, ActionIcon, Text, Tooltip } from '@mantine/core';
+import { FlipHorizontal, Microphone, Volume2, ArrowsMaximize, PlayerPlay, PlayerPause } from 'tabler-icons-react';
 import { formatTime } from '../utils/timeUtils';
 import { ViewportHandle } from './Viewport';
 
@@ -9,17 +9,20 @@ interface FooterProps {
 }
 
 function Footer({ videoRef }: FooterProps) {
-  const theme = useMantineTheme();
   const [sliderValue, setSliderValue] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(1);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     const videoElement = videoRef.current?.getVideoElement();
     if (videoElement) {
       const handleLoadedMetadata = () => setDuration(videoElement.duration);
-      const handleTimeUpdate = () => setCurrentTime(videoElement.currentTime);
+      const handleTimeUpdate = () => {
+        setCurrentTime(videoElement.currentTime);
+        setSliderValue((videoElement.currentTime / videoElement.duration) * 100);
+      };
 
       videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
       videoElement.addEventListener('timeupdate', handleTimeUpdate);
@@ -32,11 +35,11 @@ function Footer({ videoRef }: FooterProps) {
   }, [videoRef]);
 
   const handleSliderChange = (value: number) => {
-    setSliderValue(value);
     const videoElement = videoRef.current?.getVideoElement();
     if (videoElement) {
       videoElement.currentTime = (value / 100) * duration;
     }
+    setSliderValue(value);
   };
 
   const handleVolumeChange = (value: number) => {
@@ -47,44 +50,69 @@ function Footer({ videoRef }: FooterProps) {
     }
   };
 
+  const handlePlayPause = () => {
+    const videoElement = videoRef.current?.getVideoElement();
+    if (videoElement) {
+      if (videoElement.paused) {
+        videoElement.play();
+        setIsPlaying(true);
+      } else {
+        videoElement.pause();
+        setIsPlaying(false);
+      }
+    }
+  };
+
+  const handleFullScreen = () => {
+    const videoElement = videoRef.current?.getVideoElement();
+    if (videoElement) {
+      if (videoElement.requestFullscreen) {
+        videoElement.requestFullscreen();
+      } else if ((videoElement as any).webkitRequestFullscreen) {
+        (videoElement as any).webkitRequestFullscreen();
+      } else if ((videoElement as any).msRequestFullscreen) {
+        (videoElement as any).msRequestFullscreen();
+      }
+    }
+  };
+
   return (
-    <Group>
+    <Group style={{ padding: '10px', background: '#fff', borderTop: '1px solid #ddd' }}>
       <Slider
         value={sliderValue}
         onChange={handleSliderChange}
         min={0}
         max={100}
         step={1}
-        style={{ width: '60%' }}
+        style={{ flex: 1 }}
       />
-      <Text size="sm">{formatTime(currentTime)}</Text>
-      <Group position="apart" style={{ width: '40%' }}>
-        <Group spacing="xs">
-          <ActionIcon>
-            <FlipHorizontal />
+      <Text size="sm">{formatTime(currentTime)} / {formatTime(duration)}</Text>
+      <Group spacing="xs">
+        <ActionIcon onClick={handlePlayPause}>
+          {isPlaying ? <PlayerPause /> : <PlayerPlay />}
+        </ActionIcon>
+        <ActionIcon>
+          <FlipHorizontal />
+        </ActionIcon>
+        <ActionIcon>
+          <Microphone />
+        </ActionIcon>
+        <Slider
+          value={volume * 100}
+          onChange={handleVolumeChange}
+          min={0}
+          max={100}
+          step={1}
+          style={{ width: '100px' }}
+        />
+        <ActionIcon>
+          <Volume2 />
+        </ActionIcon>
+        <Tooltip label="Full Screen">
+          <ActionIcon onClick={handleFullScreen}>
+            <ArrowsMaximize />
           </ActionIcon>
-          <ActionIcon onClick={() => videoRef.current?.getVideoElement()?.play()}>
-            <Microphone />
-          </ActionIcon>
-          <Slider
-            value={volume * 100}
-            onChange={handleVolumeChange}
-            min={0}
-            max={100}
-            step={1}
-            style={{ width: '100px' }}
-          />
-        </Group>
-        <Group>
-          <ActionIcon>
-            <Volume2 />
-          </ActionIcon>
-          <Tooltip label="Full Screen">
-            <ActionIcon>
-              <ArrowsMaximize />
-            </ActionIcon>
-          </Tooltip>
-        </Group>
+        </Tooltip>
       </Group>
     </Group>
   );
